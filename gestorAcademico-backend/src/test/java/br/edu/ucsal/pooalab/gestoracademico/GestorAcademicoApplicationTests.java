@@ -1,4 +1,4 @@
-package br.edu.ucsal.poolab.gestoracademico;
+package br.edu.ucsal.pooalab.gestoracademico;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
