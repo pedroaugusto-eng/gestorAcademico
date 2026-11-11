@@ -1,7 +1,9 @@
 package br.edu.ucsal.pooalab.gestoracademico.domain.entity;
 
-import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.AlunoRequest;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_alunos")
@@ -22,14 +24,17 @@ public class Aluno {
     private String email;
     private String senha;
 
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Matricula> matriculas = new ArrayList<>();
+
     public Aluno(){}
 
-    public Aluno(AlunoRequest request) {
-        this.nome = request.nome();
-        this.cpf = request.cpf();
-        this.ra = request.ra();
-        this.email = request.email();
-        this.senha = request.senha();
+    public Aluno(String nome, String cpf, String ra, String email, String senha) {
+        this.nome = nome;
+        this.cpf = cpf;
+        this.ra = ra;
+        this.email = email;
+        this.senha = senha;
     }
 
     public Long getId() { return id; }
@@ -38,4 +43,5 @@ public class Aluno {
     public String getRa() { return ra; }
     public String getEmail() { return email; }
     public String getSenha() { return senha; }
+    public List<Matricula> getMatriculas() { return matriculas; }
 }
