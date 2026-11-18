@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestor Acadêmico · Portal do aluno</title>
+  <meta name="theme-color" content="#353d16">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo__conteudo">
+      <div class="marca marca--compacta">
+        <span class="marca__selo" aria-hidden="true">GA</span>
+        <span class="marca__nome">Gestor Acadêmico</span>
+      </div>
+
+      <nav class="secoes" aria-label="Seções do portal">
+        <a class="secoes__item" href="#minhas" data-secao="minhas">Minhas disciplinas</a>
+        <a class="secoes__item" href="#catalogo" data-secao="catalogo">Catálogo</a>
+      </nav>
+
+      <div class="topo__usuario">
+        <div class="topo__identidade">
+          <span class="topo__nome" id="aluno-nome">Carregando…</span>
+          <span class="topo__ra" id="aluno-ra"></span>
+        </div>
+        <button class="botao botao--fantasma" id="botao-sair" type="button">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="painel" aria-busy="true">
+
+    <!-- Minhas disciplinas: só o essencial; o resto fica no detalhe -->
+    <section class="vista" id="vista-minhas" aria-labelledby="titulo-minhas" hidden>
+      <div class="vista__cabecalho">
+        <h1 class="painel__titulo" id="titulo-minhas" tabindex="-1">Minhas disciplinas</h1>
+        <p class="painel__subtitulo">Abra uma disciplina para ver notas, faltas e fazer lançamentos.</p>
+      </div>
+      <div class="resumo" id="resumo" aria-label="Resumo do semestre"></div>
+      <ul class="lista-disciplinas" id="lista-minhas"></ul>
+    </section>
+
+    <!-- Catálogo: todas as disciplinas disponíveis, agrupadas por semestre -->
+    <section class="vista" id="vista-catalogo" aria-labelledby="titulo-catalogo" hidden>
+      <div class="vista__cabecalho">
+        <h1 class="painel__titulo" id="titulo-catalogo" tabindex="-1">Catálogo de disciplinas</h1>
+        <p class="painel__subtitulo">Escolha as disciplinas do semestre e matricule-se por aqui.</p>
+      </div>
+      <div id="catalogo" class="catalogo"></div>
+    </section>
+
+    <!-- Detalhe de uma disciplina matriculada -->
+    <section class="vista" id="vista-detalhe" aria-labelledby="titulo-detalhe" hidden>
+      <a class="voltar" href="#minhas">← Minhas disciplinas</a>
+
+      <header class="detalhe__cabecalho">
+        <span class="selo" id="detalhe-selo"></span>
+        <h1 class="painel__titulo" id="titulo-detalhe" tabindex="-1"></h1>
+        <p class="detalhe__meta" id="detalhe-meta"></p>
+      </header>
+
+      <div class="detalhe__grade">
+        <section class="cartao detalhe__bloco" aria-labelledby="titulo-avaliacoes">
+          <div class="bloco__topo">
+            <h2 class="bloco__titulo" id="titulo-avaliacoes" tabindex="-1">Avaliações</h2>
+            <p class="bloco__apoio">Cada unidade vale até 10 pontos</p>
+          </div>
+          <div class="unidades" id="detalhe-unidades"></div>
+
+          <form class="lancar" id="form-lancar" novalidate>
+            <h3 class="lancar__titulo">Lançar nova nota</h3>
+            <div class="lancar__campos">
+              <label class="lancar__campo">
+                <span class="lancar__rotulo">Unidade</span>
+                <select name="unidade">
+                  <option value="1">1ª unidade</option>
+                  <option value="2">2ª unidade</option>
+                </select>
+              </label>
+              <label class="lancar__campo">
+                <span class="lancar__rotulo">Tipo</span>
+                <select name="tipo">
+                  <option value="PROVA">Prova</option>
+                  <option value="ATIVIDADE">Atividade</option>
+                </select>
+              </label>
+              <label class="lancar__campo">
+                <span class="lancar__rotulo">Nota</span>
+                <input name="nota" type="number" min="0" max="10" step="0.1" inputmode="decimal"
+                       placeholder="De 0 a 10" required>
+              </label>
+              <button class="botao botao--primario" type="submit">Lançar nota</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="cartao detalhe__bloco detalhe__situacao" aria-labelledby="titulo-situacao">
+          <h2 class="bloco__titulo" id="titulo-situacao">Situação</h2>
+
+          <p class="alerta alerta--perigo" id="alerta-reprovado" hidden></p>
+
+          <!-- Média de 0 a 10, com a marca da média mínima -->
+          <div class="indicador">
+            <div class="indicador__linha">
+              <span class="indicador__rotulo" id="detalhe-media-rotulo">Média</span>
+              <span class="indicador__valor" id="detalhe-media"></span>
+            </div>
+            <div class="medidor">
+              <div class="medidor__trilho" id="detalhe-trilho-media" role="meter" aria-label="Média"
+                   aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+                <div class="medidor__preenchido" id="detalhe-barra-media"></div>
+              </div>
+              <span class="medidor__marca" id="marca-media" aria-hidden="true"><span class="medidor__numero" id="marca-media-numero"></span></span>
+            </div>
+            <p class="indicador__nota" id="detalhe-media-nota"></p>
+          </div>
+
+          <div class="indicador">
+            <div class="indicador__linha">
+              <span class="indicador__rotulo">Faltas</span>
+              <span class="indicador__valor" id="detalhe-faltas"></span>
+            </div>
+            <progress class="barra barra--faltas" id="detalhe-barra-faltas"></progress>
+            <p class="indicador__nota" id="detalhe-faltas-nota"></p>
+          </div>
+
+          <div class="faltas__acoes" id="faltas-acoes">
+            <button class="botao botao--alerta-suave" type="button" id="botao-falta">Registrar falta (2 aulas)</button>
+            <button class="botao botao--fantasma botao--pequeno" type="button" id="botao-desfazer-falta">Desfazer última falta</button>
+          </div>
+
+          <div class="confirmacao" id="confirmar-falta" hidden>
+            <p id="confirmar-falta-texto"></p>
+            <div class="nota__acoes">
+              <button class="botao botao--perigo botao--pequeno" type="button" id="confirmar-falta-sim">Registrar mesmo assim</button>
+              <button class="botao botao--fantasma botao--pequeno" type="button" id="confirmar-falta-nao">Cancelar</button>
+            </div>
+          </div>
+
+          <dl class="dados" id="detalhe-dados"></dl>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/painel.js"></script>
+</body>
+</html>

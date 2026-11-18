@@ -18,4 +18,13 @@ class CalculadoraUcsalStrategyTest {
         double notaNecessaria = calculadora.calcularNotaNecessaria(12.0);
         assertEquals(0.0, notaNecessaria);
     }
+
+    @Test
+    void mediaEhAMediaDasDuasUnidadesComMinimo6() {
+        CalculadoraMediaStrategy calculadora = new CalculadoraUcsalStrategy();
+        assertEquals(6.0, calculadora.mediaMinima());
+        assertEquals(7.25, calculadora.calcularMedia(4.5, 10.0));
+        assertEquals(6.0, calculadora.calcularMedia(5.0, 7.0));
+        assertEquals(2.25, calculadora.calcularMedia(4.5, 0.0));
+    }
 }
