@@ -1,51 +1,64 @@
 package br.edu.ucsal.pooalab.gestoracademico.domain.mapper;
 
-import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.BuscaMatriculaPorAlunoId;
-import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.DisciplinaResponse;
+import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.AvaliacaoResponse;
 import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.MatriculaResponse;
-import br.edu.ucsal.pooalab.gestoracademico.domain.entity.Aluno;
+import br.edu.ucsal.pooalab.gestoracademico.domain.dtos.UnidadeResponse;
+import br.edu.ucsal.pooalab.gestoracademico.domain.entity.Avaliacao;
 import br.edu.ucsal.pooalab.gestoracademico.domain.entity.Matricula;
+import br.edu.ucsal.pooalab.gestoracademico.domain.strategy.CalculadoraMediaStrategy;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 public class MatriculaMapper {
 
-    private AvaliacaoMapper avaliacaoMapper;
+    /** Ordem na tela: 1ª unidade antes da 2ª; dentro da unidade, prova antes de atividade. */
+    private static final Comparator<Avaliacao> ORDEM =
+            Comparator.comparingInt(Avaliacao::getUnidade).thenComparing(Avaliacao::getTipo);
 
-    public MatriculaMapper(AvaliacaoMapper avaliacaoMapper) {
-        this.avaliacaoMapper = avaliacaoMapper;
+    private final DisciplinaMapper disciplinaMapper;
+    private final CalculadoraMediaStrategy calculadora;
+
+    public MatriculaMapper(DisciplinaMapper disciplinaMapper, CalculadoraMediaStrategy calculadora) {
+        this.disciplinaMapper = disciplinaMapper;
+        this.calculadora = calculadora;
     }
 
-    public MatriculaResponse entityToResponse(Matricula matricula) {
-
-        var avaliacoesResponse = matricula.getAvaliacoes().stream()
-                .map(avaliacaoMapper::entityToResponse)
-                .collect(Collectors.toList());
-
-        return new MatriculaResponse(matricula.getAluno().getNome(),
-                                    matricula.getAluno().getRa(),
-                                    matricula.getDisciplina().getNome(),
-                                    matricula.getDisciplina().getCargaHoraria(),
-                                    matricula.getFaltas(),
-                                    avaliacoesResponse);
-    }
-
-    public BuscaMatriculaPorAlunoId entityToBuscaPorAlunoDto(Aluno aluno) {
-
-        List<DisciplinaResponse> disciplinasResponse = aluno.getMatriculas().stream()
-                .map(matricula -> new DisciplinaResponse(
-                        matricula.getDisciplina().getNome(),
-                        matricula.getDisciplina().getCargaHoraria()
-                ))
+    public MatriculaResponse paraResponse(Matricula matricula) {
+        List<AvaliacaoResponse> avaliacoes = matricula.getAvaliacoes().stream()
+                .sorted(ORDEM)
+                .map(a -> new AvaliacaoResponse(a.getId(), a.getNota(), a.getTipo(), a.getUnidade()))
                 .toList();
 
-        return new BuscaMatriculaPorAlunoId(
-                aluno.getNome(),
-                aluno.getCpf(),
-                disciplinasResponse
-        );
+        List<UnidadeResponse> unidades = IntStream.rangeClosed(1, Matricula.UNIDADES)
+                .mapToObj(n -> new UnidadeResponse(n, arredondar(matricula.notaDaUnidade(n)),
+                        Matricula.NOTA_MAXIMA_DA_UNIDADE, matricula.quantidadeDeAvaliacoesNaUnidade(n)))
+                .toList();
+
+        double unidade1 = matricula.notaDaUnidade(1);
+        double unidade2 = matricula.notaDaUnidade(2);
+        double media = arredondar(calculadora.calcularMedia(unidade1, unidade2));
+
+        return new MatriculaResponse(
+                matricula.getId(),
+                disciplinaMapper.paraResponse(matricula.getDisciplina()),
+                avaliacoes,
+                unidades,
+                media,
+                calculadora.mediaMinima(),
+                arredondar(calculadora.calcularNotaNecessaria(unidade1 + unidade2)),
+                media >= calculadora.mediaMinima(),
+                matricula.getFaltas(),
+                matricula.faltasRegistradas(),
+                matricula.getDisciplina().limiteDeFaltas(),
+                matricula.reprovadoPorFalta());
+    }
+
+    /** Evita resultados como 7.499999999 na tela. */
+    private static double arredondar(double valor) {
+        return Math.round(valor * 100.0) / 100.0;
     }
 }

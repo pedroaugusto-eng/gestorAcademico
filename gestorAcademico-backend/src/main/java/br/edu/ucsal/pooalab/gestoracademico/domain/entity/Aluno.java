@@ -12,29 +12,37 @@ public class Aluno {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 120)
     private String nome;
 
-    @Column(unique = true)
+    /** Guardado só com dígitos (11), para o login aceitar o CPF com ou sem pontuação. */
+    @Column(unique = true, nullable = false, length = 11)
     private String cpf;
 
-    @Column(unique = true)
+    /** Guardado sem espaços e em maiúsculas. */
+    @Column(unique = true, nullable = false, length = 20)
     private String ra;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 120)
     private String email;
-    private String senha;
+
+    /** Hash BCrypt da senha. A senha em texto puro nunca é gravada. */
+    @Column(name = "senha", nullable = false, length = 72)
+    private String senhaHash;
 
     @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Matricula> matriculas = new ArrayList<>();
 
-    public Aluno(){}
+    protected Aluno() {
+    }
 
-    public Aluno(String nome, String cpf, String ra, String email, String senha) {
+    public Aluno(String nome, String cpf, String ra, String email, String senhaHash) {
         this.nome = nome;
         this.cpf = cpf;
         this.ra = ra;
         this.email = email;
-        this.senha = senha;
+        this.senhaHash = senhaHash;
     }
 
     public Long getId() { return id; }
@@ -42,6 +50,6 @@ public class Aluno {
     public String getCpf() { return cpf; }
     public String getRa() { return ra; }
     public String getEmail() { return email; }
-    public String getSenha() { return senha; }
+    public String getSenhaHash() { return senhaHash; }
     public List<Matricula> getMatriculas() { return matriculas; }
 }
